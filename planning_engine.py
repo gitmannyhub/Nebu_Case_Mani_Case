@@ -22,11 +22,13 @@ class SupplyPlanningEngine:
 
         self.shipping_time = product["shipping_time"]
 
+        self.weekly_demand = product["weekly_demand"]
+
+        self.monthly_forecast = product["monthly_forecast"]
+
         self.regions = product["regions"]
 
         self.purchase_orders = product["purchase_orders"]
-
-        self.monthly_forecast = product["monthly_forecast"]
 
     # ==========================================================
     # INVENTORY
@@ -34,63 +36,79 @@ class SupplyPlanningEngine:
 
     def total_on_hand(self):
 
-        total = 0
+        return sum(
 
-        for region in self.regions.values():
+            region["on_hand"]
 
-            total += region["on_hand"]
+            for region in self.regions.values()
 
-        return total
+        )
 
     def total_weekly_demand(self):
 
-        total = 0
-
-        for region in self.regions.values():
-
-            total += region["weekly_demand"]
-
-        return total
+        return self.weekly_demand
 
     def total_open_demand(self):
 
-        total = 0
+        return sum(
 
-        for region in self.regions.values():
+            region["open_demand"]
 
-            total += region["open_demand"]
+            for region in self.regions.values()
 
-        return total
+        )
 
     def total_open_po(self):
 
-        total = 0
+        """
+        Open PO already includes
+        In Transit quantities.
+        """
 
-        for po in self.purchase_orders:
+        return sum(
 
-            if po["status"] == "Open":
+            po["qty"]
 
-                total += po["qty"]
+            for po in self.purchase_orders
 
-        return total
+        )
 
     def total_in_transit(self):
 
-        total = 0
+        return sum(
 
-        for po in self.purchase_orders:
+            po["qty"]
 
-            if po["status"] == "In Transit":
+            for po in self.purchase_orders
 
-                total += po["qty"]
+            if po["status"] == "In Transit"
 
-        return total
+        )
 
     def inventory_position(self):
 
-        return self.total_on_hand() + self.total_open_po()
+        """
+        Inventory Position
 
-    # ==========================================================
+        On Hand
+
+        +
+
+        Open PO
+
+        (Do NOT add In Transit again.)
+        """
+
+        return (
+
+            self.total_on_hand()
+
+            +
+
+            self.total_open_po()
+
+        )
+        # ==========================================================
     # WEEKS OF SUPPLY
     # ==========================================================
 
@@ -124,6 +142,17 @@ class SupplyPlanningEngine:
 
     def disruption_wos(self):
 
+        """
+        Assumes only inventory already
+        shipped is available.
+
+        On Hand
+
+        +
+
+        In Transit
+        """
+
         return round(
 
             (
@@ -144,7 +173,23 @@ class SupplyPlanningEngine:
 
         )
 
+    # ==========================================================
+    # TARGET INVENTORY
+    # ==========================================================
+
     def target_inventory(self):
+
+        """
+        Target Inventory
+
+        =
+
+        Target WOS
+
+        x
+
+        Weekly Demand
+        """
 
         return round(
 
@@ -156,49 +201,31 @@ class SupplyPlanningEngine:
 
         )
 
-    def inventory_gap(self):
+    def planning_deficit(self):
 
-        gap = self.target_inventory() - self.inventory_position()
+        """
+        Planning Deficit
 
-        return max(0, round(gap))
+        =
 
-    # ==========================================================
-    # REGIONAL WOS
-    # ==========================================================
+        Target Inventory
 
-    def regional_wos(self):
+        -
 
-        results = {}
+        Inventory Position
+        """
 
-        for region_name, region in self.regions.items():
+        return max(
 
-            wos = round(
+            0,
 
-                region["on_hand"]
+            self.target_inventory()
 
-                /
+            -
 
-                region["weekly_demand"],
+            self.inventory_position()
 
-                1
-
-            )
-
-            results[region_name] = {
-
-                "On Hand": region["on_hand"],
-
-                "Weekly Demand": region["weekly_demand"],
-
-                "Open Demand": region["open_demand"],
-
-                "Current WOS": wos,
-
-                "Target WOS": self.target_wos
-
-            }
-
-        return results
+        )
 
     # ==========================================================
     # INVENTORY HEALTH
@@ -232,9 +259,11 @@ class SupplyPlanningEngine:
 
             "Target WOS": self.target_wos,
 
+            "Target Inventory": self.target_inventory(),
+
             "Inventory Position": self.inventory_position(),
 
-            "Inventory Gap": self.inventory_gap()
+            "Planning Deficit": self.planning_deficit()
 
         }
 
@@ -244,11 +273,11 @@ class SupplyPlanningEngine:
 
     def purchase_order_health(self):
 
-        results = []
+        rows = []
 
         for po in self.purchase_orders:
 
-            results.append({
+            rows.append({
 
                 "PO": po["po"],
 
@@ -262,7 +291,7 @@ class SupplyPlanningEngine:
 
             })
 
-        return results
+        return rows
         # ==========================================================
     # STOCK BALANCE
     # ==========================================================
@@ -275,7 +304,9 @@ class SupplyPlanningEngine:
 
             receiving_wos = round(
 
-                receiving["on_hand"] /
+                receiving["on_hand"]
+
+                /
 
                 receiving["weekly_demand"],
 
@@ -289,7 +320,15 @@ class SupplyPlanningEngine:
 
             shortage = round(
 
-                (self.target_wos - receiving_wos)
+                (
+
+                    self.target_wos
+
+                    -
+
+                    receiving_wos
+
+                )
 
                 *
 
@@ -300,6 +339,7 @@ class SupplyPlanningEngine:
             for donor_name, donor in self.regions.items():
 
                 if donor_name == receiving_name:
+
                     continue
 
                 donor_wos = round(
@@ -315,11 +355,20 @@ class SupplyPlanningEngine:
                 )
 
                 if donor_wos <= self.target_wos:
+
                     continue
 
                 surplus = round(
 
-                    (donor_wos - self.target_wos)
+                    (
+
+                        donor_wos
+
+                        -
+
+                        self.target_wos
+
+                    )
 
                     *
 
@@ -328,9 +377,16 @@ class SupplyPlanningEngine:
                 )
 
                 if surplus <= 0:
+
                     continue
 
-                transfer = min(shortage, surplus)
+                transfer_qty = min(
+
+                    shortage,
+
+                    surplus
+
+                )
 
                 transfers.append({
 
@@ -338,7 +394,7 @@ class SupplyPlanningEngine:
 
                     "Donor Region": donor_name,
 
-                    "Transfer Qty": transfer,
+                    "Transfer Qty": transfer_qty,
 
                     "Receiving WOS": receiving_wos,
 
@@ -346,12 +402,10 @@ class SupplyPlanningEngine:
 
                 })
 
-                shortage -= transfer
-
-                donor["on_hand"] -= transfer
-                receiving["on_hand"] += transfer
+                shortage -= transfer_qty
 
                 if shortage <= 0:
+
                     break
 
         if len(transfers) == 0:
@@ -362,9 +416,7 @@ class SupplyPlanningEngine:
 
                 "Transfers": [],
 
-                "Recommendation":
-
-                    "No Stock Balance Available"
+                "Recommendation": "No Stock Balance Available"
 
             }
 
@@ -374,13 +426,10 @@ class SupplyPlanningEngine:
 
             "Transfers": transfers,
 
-            "Recommendation":
-
-                "Execute Stock Transfer"
+            "Recommendation": "Execute Stock Balance"
 
         }
-
-    # ==========================================================
+        # ==========================================================
     # PULL LOGIC
     # ==========================================================
 
@@ -394,17 +443,19 @@ class SupplyPlanningEngine:
 
                 "Status": "NOT REQUIRED",
 
+                "Priority": "Oldest PO First",
+
                 "Pulled Qty": 0,
+
+                "Remaining Deficit": 0,
 
                 "POs": [],
 
-                "Recommendation":
-
-                    "Stock Balance resolved shortage"
+                "Recommendation": "Recovered through Stock Balance"
 
             }
 
-        remaining_gap = self.inventory_gap()
+        remaining = self.planning_deficit()
 
         candidates = [
 
@@ -418,9 +469,9 @@ class SupplyPlanningEngine:
 
         candidates.sort(
 
-            key=lambda x: datetime.strptime(
+            key=lambda po: datetime.strptime(
 
-                x["delivery_date"],
+                po["delivery_date"],
 
                 "%Y-%m-%d"
 
@@ -430,18 +481,19 @@ class SupplyPlanningEngine:
 
         pulled = []
 
-        total = 0
+        pulled_qty = 0
 
         for po in candidates:
 
-            if remaining_gap <= 0:
+            if remaining <= 0:
+
                 break
 
             qty = min(
 
                 po["qty"],
 
-                remaining_gap
+                remaining
 
             )
 
@@ -451,29 +503,29 @@ class SupplyPlanningEngine:
 
                 "Qty": qty,
 
-                "Original Delivery":
-
-                    po["delivery_date"]
+                "Original Delivery": po["delivery_date"]
 
             })
 
-            total += qty
+            pulled_qty += qty
 
-            remaining_gap -= qty
+            remaining -= qty
 
-        if total == 0:
+        if pulled_qty == 0:
 
             return {
 
                 "Status": "FAILED",
 
+                "Priority": "Oldest PO First",
+
                 "Pulled Qty": 0,
+
+                "Remaining Deficit": self.planning_deficit(),
 
                 "POs": [],
 
-                "Recommendation":
-
-                    "No Pull Candidates"
+                "Recommendation": "No Open Purchase Orders Available"
 
             }
 
@@ -481,23 +533,18 @@ class SupplyPlanningEngine:
 
             "Status": "SUCCESS",
 
-            "Priority":
+            "Priority": "Oldest PO First",
 
-                "Oldest PO First",
+            "Pulled Qty": pulled_qty,
 
-            "Pulled Qty": total,
-
-            "Remaining Gap": remaining_gap,
+            "Remaining Deficit": remaining,
 
             "POs": pulled,
 
-            "Recommendation":
-
-                f"Prioritise {len(pulled)} Purchase Orders"
+            "Recommendation": f"Prioritise {len(pulled)} Purchase Orders"
 
         }
-
-    # ==========================================================
+        # ==========================================================
     # PUSH LOGIC
     # ==========================================================
 
@@ -511,13 +558,15 @@ class SupplyPlanningEngine:
 
                 "Status": "NOT REQUIRED",
 
+                "Priority": "Newest PO First",
+
                 "Pushed Qty": 0,
+
+                "Required Capacity": 0,
 
                 "POs": [],
 
-                "Recommendation":
-
-                    "No Push Required"
+                "Recommendation": "No Push Required"
 
             }
 
@@ -535,9 +584,9 @@ class SupplyPlanningEngine:
 
         candidates.sort(
 
-            key=lambda x: datetime.strptime(
+            key=lambda po: datetime.strptime(
 
-                x["delivery_date"],
+                po["delivery_date"],
 
                 "%Y-%m-%d"
 
@@ -549,18 +598,19 @@ class SupplyPlanningEngine:
 
         pushed = []
 
-        capacity = 0
+        pushed_qty = 0
 
         for po in candidates:
 
-            if capacity >= required_capacity:
+            if pushed_qty >= required_capacity:
+
                 break
 
             qty = min(
 
                 po["qty"],
 
-                required_capacity - capacity
+                required_capacity - pushed_qty
 
             )
 
@@ -570,132 +620,74 @@ class SupplyPlanningEngine:
 
                 "Qty": qty,
 
-                "Original Delivery":
-
-                    po["delivery_date"]
+                "Original Delivery": po["delivery_date"]
 
             })
 
-            capacity += qty
+            pushed_qty += qty
 
         return {
 
             "Status": "SUCCESS",
 
-            "Priority":
+            "Priority": "Newest PO First",
 
-                "Newest PO First",
-
-            "Pushed Qty": capacity,
+            "Pushed Qty": pushed_qty,
 
             "Required Capacity": required_capacity,
 
             "POs": pushed,
 
-            "Recommendation":
-
-                f"Push {capacity:,} units to free OEM capacity"
+            "Recommendation": f"Push {pushed_qty:,} units to free OEM capacity"
 
         }
-        # ==========================================================
+
+    # ==========================================================
     # PO SHORTAGE
     # ==========================================================
 
     def po_shortage(self):
 
-        balance = self.stock_balance()
+        deficit = self.planning_deficit()
 
-        if balance["Status"] == "SUCCESS":
-
-            return {
-
-                "Required": False,
-
-                "Reason": "Resolved through Stock Balance",
-
-                "OEM Capacity Shortage": 0,
-
-                "Recommended PO": 0
-
-            }
-
-        pull = self.pull_logic()
-
-        if pull["Status"] != "SUCCESS":
+        if deficit <= 0:
 
             return {
 
                 "Required": False,
 
-                "Reason": "No Pull Candidates",
+                "Reason": "Target Inventory Achieved",
 
-                "OEM Capacity Shortage": 0,
+                "Planning Deficit": 0,
 
-                "Recommended PO": 0
-
-            }
-
-        push = self.push_logic()
-
-        shortage = max(
-
-            0,
-
-            pull["Pulled Qty"]
-
-            -
-
-            push["Pushed Qty"]
-
-        )
-
-        if shortage == 0:
-
-            return {
-
-                "Required": False,
-
-                "Reason": "OEM Capacity Available",
-
-                "OEM Capacity Shortage": 0,
+                "MOQ": self.moq,
 
                 "Recommended PO": 0
 
             }
-
-        recommendation = max(
-
-            shortage,
-
-            self.moq
-
-        )
 
         return {
 
             "Required": True,
 
-            "Reason":
+            "Reason": "Planning Deficit Identified",
 
-                "Pull exceeded Push capacity",
+            "Planning Deficit": deficit,
 
-            "OEM Capacity Shortage":
+            "MOQ": self.moq,
 
-                shortage,
-
-            "Recommended PO":
-
-                recommendation
+            "Recommended PO": max(deficit, self.moq)
 
         }
-
-    # ==========================================================
+        # ==========================================================
     # ALLOCATION ENGINE
     # ==========================================================
 
     def allocation_engine(self):
 
         available = self.total_on_hand()
+
+        remaining = available
 
         allocation = {}
 
@@ -708,8 +700,6 @@ class SupplyPlanningEngine:
             "APAC"
 
         ]
-
-        remaining = available
 
         for region in priority:
 
@@ -727,11 +717,11 @@ class SupplyPlanningEngine:
 
             fill_rate = round(
 
-                allocated / demand * 100,
+                (allocated / demand) * 100,
 
                 1
 
-            )
+            ) if demand > 0 else 0
 
             allocation[region] = {
 
@@ -749,17 +739,11 @@ class SupplyPlanningEngine:
 
         return {
 
-            "Available Inventory":
+            "Available Inventory": available,
 
-                available,
+            "Remaining Inventory": remaining,
 
-            "Remaining Inventory":
-
-                remaining,
-
-            "Regions":
-
-                allocation
+            "Regions": allocation
 
         }
 
@@ -773,65 +757,51 @@ class SupplyPlanningEngine:
 
             if self.lead_time >= 8:
 
-                level = "Critical"
+                risk = "Critical"
 
             elif self.lead_time >= 6:
 
-                level = "High"
+                risk = "High"
 
             elif self.lead_time >= 3:
 
-                level = "Moderate"
+                risk = "Moderate"
 
             else:
 
-                level = "Low"
+                risk = "Low"
 
         else:
 
-            weeks_left = self.current_wos()
+            risk = "Low"
 
-            if weeks_left <= 3:
+        recommendations = {
 
-                level = "High"
+            "Critical":
 
-            elif weeks_left <= 6:
+                "Immediate escalation with supplier and executive review.",
 
-                level = "Moderate"
+            "High":
 
-            else:
+                "Daily monitoring and supplier recovery plan.",
 
-                level = "Low"
+            "Moderate":
+
+                "Weekly review of supply position.",
+
+            "Low":
+
+                "Continue monitoring."
+
+        }
 
         return {
 
-            "Current Backlog":
+            "Current Backlog": self.backlog,
 
-                self.backlog,
+            "Risk": risk,
 
-            "Risk":
-
-                level,
-
-            "Recommendation": {
-
-                "Critical":
-
-                    "Immediate escalation",
-
-                "High":
-
-                    "Daily monitoring",
-
-                "Moderate":
-
-                    "Weekly review",
-
-                "Low":
-
-                    "Monitor"
-
-            }[level]
+            "Recommendation": recommendations[risk]
 
         }
 
@@ -841,105 +811,92 @@ class SupplyPlanningEngine:
 
     def supplier_health(self):
 
-        delayed = self.total_open_po()
-
         status = "Healthy"
-
-        if delayed > 0:
-
-            status = "Monitor"
 
         if self.backlog > 0:
 
             status = "High Risk"
 
+        elif self.total_open_po() > 0:
+
+            status = "Monitor"
+
         return {
 
-            "Supplier":
+            "Supplier": self.supplier,
 
-                self.supplier,
+            "Status": status,
 
-            "Status":
+            "Lead Time": self.lead_time,
 
-                status,
+            "Shipping": self.shipping_time,
 
-            "Lead Time":
+            "Open PO": self.total_open_po(),
 
-                self.lead_time,
+            "In Transit": self.total_in_transit(),
 
-            "Shipping":
-
-                self.shipping_time,
-
-            "Open PO":
-
-                self.total_open_po(),
-
-            "In Transit":
-
-                self.total_in_transit()
+            "PO Balance": self.total_open_po() - self.total_in_transit()
 
         }
-
-    # ==========================================================
+        # ==========================================================
     # DECISION LOG
     # ==========================================================
 
     def decision_log(self):
 
-        decisions = []
+        return [
 
-        decisions.append({
+            {
 
-            "Step":1,
+                "Step": 1,
 
-            "Decision":
+                "Decision":
 
-                self.stock_balance()["Recommendation"]
+                    self.stock_balance()["Recommendation"]
 
-        })
+            },
 
-        decisions.append({
+            {
 
-            "Step":2,
+                "Step": 2,
 
-            "Decision":
+                "Decision":
 
-                self.pull_logic()["Recommendation"]
+                    self.pull_logic()["Recommendation"]
 
-        })
+            },
 
-        decisions.append({
+            {
 
-            "Step":3,
+                "Step": 3,
 
-            "Decision":
+                "Decision":
 
-                self.push_logic()["Recommendation"]
+                    self.push_logic()["Recommendation"]
 
-        })
+            },
 
-        decisions.append({
+            {
 
-            "Step":4,
+                "Step": 4,
 
-            "Decision":
+                "Decision":
 
-                self.po_shortage()["Reason"]
+                    self.po_shortage()["Reason"]
 
-        })
+            },
 
-        decisions.append({
+            {
 
-            "Step":5,
+                "Step": 5,
 
-            "Decision":
+                "Decision":
 
-                self.backlog_risk()["Recommendation"]
+                    self.backlog_risk()["Recommendation"]
 
-        })
+            }
 
-        return decisions
+        ]
 
     # ==========================================================
     # EXECUTIVE SUMMARY
@@ -969,6 +926,10 @@ class SupplyPlanningEngine:
 
                 self.po_shortage(),
 
+            "Allocation":
+
+                self.allocation_engine(),
+
             "Backlog":
 
                 self.backlog_risk(),
@@ -985,46 +946,58 @@ class SupplyPlanningEngine:
 
     def ai_summary(self):
 
+        inventory = self.inventory_health()
+
         shortage = self.po_shortage()
 
         return f"""
 SUPPLY PLANNING DECISION REPORT
 
-Current WOS:
-{self.current_wos()} weeks
+Current WOS: {inventory['Current WOS']} weeks
+Pipeline WOS: {inventory['Pipeline WOS']} weeks
+Disruption WOS: {inventory['Disruption WOS']} weeks
 
-Target WOS:
-{self.target_wos} weeks
+Target WOS: {self.target_wos} weeks
 
-Inventory Position:
-{self.inventory_position():,} units
+Target Inventory: {inventory['Target Inventory']:,} units
 
-Stock Balance:
-{self.stock_balance()['Recommendation']}
+Inventory Position: {inventory['Inventory Position']:,} units
 
-Pull Logic:
-{self.pull_logic()['Recommendation']}
+Planning Deficit: {inventory['Planning Deficit']:,} units
 
-Push Logic:
-{self.push_logic()['Recommendation']}
+Recommended New Buy: {shortage['Recommended PO']:,} units
 
-PO Shortage:
-{shortage['Reason']}
+Supplier MOQ: {self.moq:,} units
 
-Recommended New Buy:
-{shortage['Recommended PO']:,} units
+Backlog Risk: {self.backlog_risk()['Risk']}
 
-Backlog Risk:
-{self.backlog_risk()['Risk']}
+Supplier Status: {self.supplier_health()['Status']}
 
-Supplier Status:
-{self.supplier_health()['Status']}
+Planning Sequence
 
-Recommended Action:
+1. Review Inventory Health
+2. Execute Stock Balance
+3. Pull Oldest Purchase Orders
+4. Push Newest Purchase Orders
+5. Review Planning Deficit
+6. Raise New Buy only if a deficit remains
 
-1. Execute Stock Balance if available.
-2. Pull oldest purchase orders.
-3. Push newest purchase orders to free OEM capacity.
-4. Raise a New Buy Purchase Order only if Pull/Push cannot resolve the shortage.
-5. Monitor backlog until supplier recovery is confirmed.
+Planning Formula
+
+Target Inventory
+=
+Target WOS × Weekly Demand
+
+Inventory Position
+=
+On Hand + Open Purchase Orders
+
+Planning Deficit
+=
+Target Inventory − Inventory Position
+
+Recommended New Buy
+=
+MAX(Planning Deficit, MOQ)
 """
+    

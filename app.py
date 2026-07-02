@@ -11,9 +11,13 @@ from report_engine import ReportEngine
 # ======================================================
 
 st.set_page_config(
+
     page_title="Supply Planning Decision Report",
+
     page_icon="📦",
+
     layout="wide"
+
 )
 
 # ======================================================
@@ -22,27 +26,10 @@ st.set_page_config(
 
 st.title("📦 Supply Planning Decision Report")
 
+st.subheader("Prepared by Manikandan Sankaran")
+
 st.caption(
-    "Business Case Demonstration | Nabu Casa | OEM Priority Decision Engine"
-)
-
-st.info(
-"""
-This application demonstrates how supply planning decisions can be supported
-through rule-based reporting.
-
-The report addresses:
-
-• Part A – Supply Disruption Management
-
-• Part B – Inventory Allocation
-
-• Part C – Inventory Planning & Replenishment
-
-• Part D – Reporting & Risk Management
-
-using a structured decision engine similar to an OEM Supply Planning Report.
-"""
+    "Business Case Demonstration | Nabu Casa | Supply Planning Decision Framework"
 )
 
 st.divider()
@@ -51,13 +38,19 @@ st.divider()
 # PRODUCT SELECTION
 # ======================================================
 
-selected = st.selectbox(
+with st.container(border=True):
 
-    "Select Product",
+    st.subheader("Select Product")
 
-    [p["part_number"] for p in products]
+    selected = st.selectbox(
 
-)
+        "Product",
+
+        [p["part_number"] for p in products],
+
+        label_visibility="collapsed"
+
+    )
 
 product = next(
 
@@ -69,568 +62,347 @@ product = next(
 
 )
 
+# ======================================================
+# INITIALISE ENGINE
+# ======================================================
+
 engine = SupplyPlanningEngine(product)
 
 report = ReportEngine(engine)
 
-# ======================================================
-# BUSINESS CASE INPUT
-# ======================================================
+inventory = engine.inventory_health()
 
-st.header("📄 Business Case Scenario")
+shortage = engine.po_shortage()
 
-left, right = st.columns(2)
+allocation = engine.allocation_engine()
 
-with left:
+backlog = engine.backlog_risk()
 
-    st.subheader("Current Position")
-
-    current = pd.DataFrame({
-
-        "Metric":[
-
-            "Lead Time",
-
-            "Shipping Time",
-
-            "Total Lead Time",
-
-            "MOQ",
-
-            "On Hand",
-
-            "Open Purchase Order",
-
-            "In Transit",
-
-            "PO Balance"
-
-        ],
-
-        "Value":[
-
-            "8 Weeks",
-
-            "2 Weeks",
-
-            "10 Weeks",
-
-            "5,000",
-
-            "8,000",
-
-            "10,000",
-
-            "4,000",
-
-            "6,000"
-
-        ]
-
-    })
-
-    st.table(current)
-
-with right:
-
-    st.subheader("Regional Open Demand")
-
-    demand = pd.DataFrame({
-
-        "Region":[
-
-            "🇪🇺 EU",
-
-            "🇺🇸 US",
-
-            "🌏 APAC"
-
-        ],
-
-        "Open Demand":[
-
-            "3,000",
-
-            "4,500",
-
-            "2,000"
-
-        ]
-
-    })
-
-    st.table(demand)
-
-st.divider()
+supplier = engine.supplier_health()
 
 # ======================================================
-# FORECAST
+# APPLICATION TABS
 # ======================================================
 
-st.header("📈 Forecast")
-
-forecast = pd.DataFrame({
-
-    "Month":[
-
-        "Month 1",
-
-        "Month 2",
-
-        "Month 3",
-
-        "Month 4"
-
-    ],
-
-    "Forecast":[
-
-        "6,000",
-
-        "7,500",
-
-        "9,000",
-
-        "6,500"
-
-    ]
-
-})
-
-st.table(forecast)
-st.divider()
-
-# ======================================================
-# PLANNING METRICS
-# ======================================================
-
-st.header("📊 Planning Metrics")
-
-avg_monthly = round(sum(product["monthly_forecast"]) / 4)
-
-avg_weekly = product["weekly_demand"]
-
-planning = pd.DataFrame({
-
-    "Metric":[
-
-        "Average Monthly Forecast",
-
-        "Average Weekly Run Rate",
-
-        "Current Weeks of Supply",
-
-        "Pipeline Weeks of Supply",
-
-        "Pipeline Disruption WOS",
-
-        "Target Weeks of Supply"
-
-    ],
-
-    "Value":[
-
-        f"{avg_monthly:,} Units",
-
-        f"{avg_weekly:,} Units",
-
-        "4.8 Weeks",
-
-        "10.8 Weeks",
-
-        "7.2 Weeks",
-
-        "12 Weeks"
-
-    ]
-
-})
-
-st.table(planning)
-
-st.divider()
-
-# ======================================================
-# DECISION SUMMARY
-# ======================================================
-
-st.header("🚦Decision Summary")
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-
-    st.metric(
-
-        "Current WOS",
-
-        "4.8",
-
-        "-7.2 vs Target"
-
-    )
-
-with col2:
-
-    st.metric(
-
-        "Inventory Gap",
-
-        "7,328",
-
-        "Units"
-
-    )
-
-with col3:
-
-    st.metric(
-
-        "Backlog",
-
-        "9,500",
-
-        "Critical"
-
-    )
-
-with col4:
-
-    st.metric(
-
-        "Supplier",
-
-        "CMHK",
-
-        "High Risk"
-
-    )
-
-st.divider()
-
-# ======================================================
-# INTERVIEW ASSUMPTIONS
-# ======================================================
-
-st.header("📌 Planning Assumptions")
-
-st.markdown("""
-
-### Business Assumptions
-
-- Regional demand represents current open customer orders awaiting fulfilment.
-
-- Target inventory policy is **12 Weeks of Supply**
-(8 weeks manufacturing + 2 weeks shipping + 2 weeks safety buffer).
-
-- Purchase Orders are prioritised using **Oldest PO First**.
-
-- OEM Capacity is balanced by **pushing the newest Purchase Orders**.
-
-- New Buy Purchase Orders are only recommended after:
-
-    • Stock Balance
-
-    • Pull Logic
-
-    • Push Logic
-
-have all been exhausted.
-
-- Current backlog represents customer orders already waiting for supply.
-
-- Backlog Risk is determined using current backlog together with supplier lead time.
-
-""")
-
-st.divider()
-# ======================================================
-# BUSINESS CASE TABS
-# ======================================================
-
-tab1, tab2, tab3, tab4 = st.tabs(
+tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs(
     [
-        "🅰 Part A - Supply Disruption",
-        "🅱 Part B - Allocation",
-        "🅲 Part C - Inventory Planning",
-        "📊 Executive Report"
+        "📝 Planning Assumptions & Scope",
+        "📊 Executive Decision Report",
+        "🅰 Part A",
+        "🅱 Part B",
+        "🅲 Part C",
+        "🅳 Part D"
     ]
 )
 
 # ======================================================
-# PART A
+# EXECUTIVE DECISION REPORT
 # ======================================================
 
 with tab1:
 
-    st.header("Part A - Supply Disruption Management")
+    report.render()
+# ======================================================
+# PLANNING ASSUMPTIONS & SCOPE
+# ======================================================
 
-    st.subheader("Scenario")
+with tab0:
 
-    st.warning("""
-Two days before shipment, the manufacturer confirms that only 4,000 units
-can ship immediately.
+    st.header("📝 Planning Assumptions & Scope")
 
-The remaining 6,000 units will be delayed by approximately three weeks.
+    with st.container(border=True):
+
+        st.markdown("""
+This business case intentionally leaves several areas open to interpretation.
+The following assumptions were made to create a consistent, realistic and
+repeatable Supply Planning Decision Framework.
+
+These assumptions establish the planning context for every decision made
+throughout this prototype.
 """)
 
-    st.subheader("First 48 Hours Priorities")
+    # ======================================================
+    # PURCHASE ORDER TIMELINE
+    # ======================================================
 
-    priorities = [
-        "Contact Contract Manufacturer",
-        "Confirm Root Cause",
-        "Validate Revised Shipment Schedule",
-        "Assess Inventory Position",
-        "Review Customer Backlog",
-        "Review Open Purchase Orders",
-        "Evaluate Stock Balance Opportunities",
-        "Prepare Internal Stakeholder Update"
-    ]
+    with st.container(border=True):
 
-    for p in priorities:
-        st.checkbox(p, value=True)
+        st.subheader("📅 Purchase Order Timeline")
 
-    st.subheader("Stakeholders")
+        st.markdown("""
 
-    stakeholders = {
-        "Stakeholder": [
-            "Supply Planning",
-            "Finance",
-            "Sales",
-            "Customer Support",
-            "Warehouse",
-            "Contract Manufacturer"
-        ],
-        "Reason": [
-            "Inventory Planning",
-            "Working Capital",
-            "Customer Commitments",
-            "Distributor Communication",
-            "Receiving Schedule",
-            "Recovery Plan"
-        ]
-    }
+**Assumption**
 
-    st.table(pd.DataFrame(stakeholders))
+The existing **10,000-unit Purchase Order** is assumed to have been
+created approximately **10 weeks** before the expected delivery.
 
-    st.subheader("Key Risks")
+The replenishment timeline is interpreted as:
 
-    risks = pd.DataFrame({
+• Manufacturing Lead Time = **8 Weeks**
 
-        "Risk":[
+• Shipping & Logistics = **2 Weeks**
 
-            "Customer Backlog",
+• Total Replenishment Lead Time = **10 Weeks**
 
-            "Lost Revenue",
+Two days before the planned shipment, the supplier confirms that
+only **4,000 units** can ship due to a component shortage, with the
+remaining **6,000 units** arriving approximately three weeks later.
 
-            "Promotion Risk",
+**Reason**
 
-            "Supplier Delay",
-
-            "Inventory Shortage"
-
-        ],
-
-        "Impact":[
-
-            "High",
-
-            "High",
-
-            "High",
-
-            "Critical",
-
-            "Critical"
-
-        ]
-
-    })
-
-    st.dataframe(
-        risks,
-        use_container_width=True,
-        hide_index=True
-    )
-
-# ======================================================
-# PART B
-# ======================================================
-
-with tab2:
-
-    st.header("Part B - Inventory Allocation")
-
-    allocation = engine.allocation_engine()
-
-    st.metric(
-        "Available Inventory",
-        "4,000 Units"
-    )
-
-    st.subheader("Allocation Priority")
-
-    st.markdown("""
-
-1. 🇺🇸 US
-
-Major promotional launch
-
-2. 🇪🇺 EU
-
-Stable baseline demand
-
-3. 🌏 APAC
-
-Strategic growth market
+The case does not specify the Purchase Order creation date or
+shipping duration, therefore a realistic replenishment timeline
+has been assumed.
 
 """)
 
-    rows = []
+    # ======================================================
+    # LEAD TIME
+    # ======================================================
 
-    for region, values in allocation["Regions"].items():
+    with st.container(border=True):
 
-        rows.append({
+        st.subheader("🚢 Lead Time Definition")
 
-            "Region": region,
+        st.markdown("""
 
-            "Demand": values["Demand"],
+**Assumption**
 
-            "Allocated": values["Allocated"],
+The stated **8-week Lead Time** is interpreted as the supplier's
+manufacturing lead time.
 
-            "Backlog": values["Backlog"],
+Inventory planning uses the **total replenishment lead time**:
 
-            "Fill Rate %": values["Fill Rate"]
+Manufacturing
+
+8 Weeks
+
++
+
+Shipping
+
+2 Weeks
+
+=
+
+10 Weeks
+
+**Reason**
+
+Planning decisions should be based on the time until inventory
+becomes available for sale rather than production completion.
+
+""")
+
+    # ======================================================
+    # DEMAND
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("📦 Regional Open Demand")
+
+        st.markdown("""
+
+**Assumption**
+
+Regional demand represents confirmed distributor and customer
+purchase orders awaiting fulfilment rather than forecast demand.
+
+""")
+
+        demand = pd.DataFrame({
+
+            "Region":[
+
+                "🇺🇸 United States",
+
+                "🇪🇺 Europe",
+
+                "🌏 APAC"
+
+            ],
+
+            "Open Demand":[
+
+                "4,500",
+
+                "3,000",
+
+                "2,000"
+
+            ]
 
         })
 
-    st.dataframe(
-        pd.DataFrame(rows),
-        use_container_width=True,
-        hide_index=True
-    )
+        st.dataframe(
 
-    st.subheader("Trade-offs")
+            demand,
 
-    st.info("""
-US receives priority due to promotional commitments.
+            use_container_width=True,
 
-EU receives baseline supply to protect existing revenue.
+            hide_index=True
 
-APAC receives remaining inventory to maintain long-term strategic growth.
+        )
+
+        st.markdown("""
+
+**Reason**
+
+This ensures allocation decisions prioritise confirmed customer
+commitments during constrained supply.
+
 """)
+
     # ======================================================
-# PART C
-# ======================================================
+    # INVENTORY POSITION
+    # ======================================================
 
-with tab3:
+    with st.container(border=True):
 
-    st.header("Part C - Inventory Planning & Replenishment")
+        st.subheader("📊 Inventory Position")
 
-    shortage = engine.po_shortage()
+        st.markdown("""
 
-    st.subheader("Planning Metrics")
+**Assumption**
 
-    c1, c2, c3 = st.columns(3)
+Open Purchase Orders already include In Transit inventory.
 
-    with c1:
+Therefore In Transit is **not** added again.
 
-        st.metric(
-            "Current WOS",
-            "4.8 Weeks"
-        )
+Inventory Position
 
-    with c2:
+=
 
-        st.metric(
-            "Target WOS",
-            "12 Weeks"
-        )
+On Hand
 
-    with c3:
++
 
-        st.metric(
-            "Inventory Gap",
-            "7,328 Units"
-        )
+Open Purchase Orders
 
-    st.divider()
+=
 
-    st.subheader("Decision Hierarchy")
+8,000
 
-    st.markdown("""
++
 
-### Step 1 — Stock Balance
+10,000
 
-Transfer inventory from regions above **12 Weeks of Supply**.
+=
 
-↓
+18,000 Units
 
-### Step 2 — Pull Logic
+**Reason**
 
-Prioritise the **Oldest Purchase Orders**.
-
-↓
-
-### Step 3 — Push Logic
-
-Push the **Newest Purchase Orders** to free OEM build capacity.
-
-↓
-
-### Step 4 — PO Shortage
-
-If Pull + Push cannot recover supply,
-
-recommend a **New Buy Purchase Order**.
+This avoids double-counting inventory already contained within
+the Purchase Order quantity.
 
 """)
 
-    st.divider()
+    # ======================================================
+    # DISTRIBUTION CENTRE
+    # ======================================================
 
-    st.subheader("Purchase Order Recommendation")
+    with st.container(border=True):
 
-    recommendation = pd.DataFrame({
+        st.subheader("🏢 Distribution Network")
 
-        "Decision":[
+        st.markdown("""
 
-            "Current WOS",
+**Assumption**
 
-            "Pipeline WOS",
+The business case does not define the distribution network.
 
-            "Disruption WOS",
+A single central distribution centre is assumed where inventory
+is received before allocation to regional distributors.
 
-            "Target WOS",
+**Reason**
 
-            "Recommended New Buy"
+This keeps the exercise focused on inventory planning,
+allocation and replenishment rather than transport optimisation.
 
-        ],
+""")
 
-        "Value":[
+    # ======================================================
+    # FINISHED GOODS
+    # ======================================================
 
-            "4.8",
+    with st.container(border=True):
 
-            "10.8",
+        st.subheader("📦 Finished Goods Scope")
 
-            "7.2",
+        st.markdown("""
 
-            "12",
+**Assumption**
 
-            f'{shortage["Recommended PO"]:,} Units'
+The flagship product is treated as a Finished Good supplied
+by a Contract Manufacturer to regional distributors.
 
-        ]
+The scope excludes:
 
-    })
+• Service Parts
 
-    st.table(recommendation)
+• Repair Inventory
 
-    st.divider()
+• Reverse Logistics
 
-    st.subheader("Finance Justification")
+• RMAs
 
-    st.success("""
+**Reason**
 
-A new Purchase Order is recommended only after
+The exercise focuses exclusively on Finished Goods planning.
+
+""")
+
+    # ======================================================
+    # APPLICATION DESIGN
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("💻 Application Design Decisions")
+
+        st.markdown("""
+
+Although the business case contains only one product,
+the planning engine has been designed to support:
+
+• Multiple Products
+
+• Multiple Suppliers
+
+• Multiple Manufacturing Sites
+
+• Multiple Regions
+
+without changing the business logic.
+
+This demonstrates scalability and future reuse.
+
+""")
+
+    # ======================================================
+    # EXECUTIVE REPORT
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("📊 Executive Decision Report")
+
+        st.markdown("""
+
+Rather than presenting calculations independently,
+this prototype generates a structured Executive Decision Report.
+
+The design was inspired by a reporting solution I developed at Apple,
+where automated business rules and reporting gave planners and buyers
+early visibility of supply risks before they became customer issues.
+
+The same principles have been adapted here to monitor:
+
+• Inventory Health
+
+• Purchase Order Health
 
 • Stock Balance
 
@@ -638,71 +410,1328 @@ A new Purchase Order is recommended only after
 
 • Push Logic
 
-have been exhausted.
+• Planning Deficit
 
-This minimises excess inventory while maintaining the target
-12 Weeks of Supply.
+• New Buy Proposal
+
+• Allocation
+
+• Supplier Health
+
+• Backlog Risk
+
+• Decision Log
+
+• AI Executive Summary
 
 """)
 
+    with st.container(border=True):
+
+        st.success(
+"""
+These planning assumptions provide a transparent foundation
+for every recommendation generated throughout this Supply
+Planning Decision Framework.
+"""
+        )
 # ======================================================
-# EXECUTIVE REPORT
+# PART A
+# ======================================================
+
+with tab2:
+
+    st.header("🅰 Part A — Supply Disruption Management")
+
+    with st.container(border=True):
+
+        st.subheader("Scenario")
+
+        st.write(
+            """
+Two days before the scheduled shipment, the Contract Manufacturer
+confirmed that only **4,000 units** could be shipped due to a component
+shortage.
+
+The remaining **6,000 units** would be delayed by approximately
+**three weeks**.
+
+The objective is to minimise customer impact while maintaining supply
+continuity through structured planning decisions.
+"""
+        )
+
+    # ======================================================
+    # FIRST 48 HOURS
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Immediate Response (First 48 Hours)")
+
+        response = [
+
+            "Validate supplier root cause",
+
+            "Confirm revised production schedule",
+
+            "Review Inventory Health",
+
+            "Calculate Weeks of Supply",
+
+            "Review customer backlog",
+
+            "Review open Purchase Orders",
+
+            "Evaluate Stock Balance",
+
+            "Evaluate Pull opportunities",
+
+            "Evaluate Push opportunities",
+
+            "Calculate Planning Deficit",
+
+            "Determine New Buy requirement",
+
+            "Communicate recovery plan"
+
+        ]
+
+        for item in response:
+
+            st.checkbox(
+
+                item,
+
+                value=True,
+
+                disabled=True
+
+            )
+
+    # ======================================================
+    # BUSINESS POSITION
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Current Business Position")
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        c1.metric(
+
+            "On Hand",
+
+            f"{engine.total_on_hand():,}"
+
+        )
+
+        c2.metric(
+
+            "Open PO",
+
+            f"{engine.total_open_po():,}"
+
+        )
+
+        c3.metric(
+
+            "In Transit",
+
+            f"{engine.total_in_transit():,}"
+
+        )
+
+        c4.metric(
+
+            "MOQ",
+
+            f"{product['moq']:,}"
+
+        )
+
+        st.divider()
+
+        left, right = st.columns(2)
+
+        with left:
+
+            st.subheader("Supply")
+
+            supply = pd.DataFrame({
+
+                "Metric":[
+
+                    "Manufacturing Lead Time",
+
+                    "Shipping",
+
+                    "Total Lead Time",
+
+                    "Outstanding PO"
+
+                ],
+
+                "Value":[
+
+                    "8 Weeks",
+
+                    "2 Weeks",
+
+                    "10 Weeks",
+
+                    f"{engine.total_open_po()-engine.total_in_transit():,}"
+
+                ]
+
+            })
+
+            st.dataframe(
+
+                supply,
+
+                use_container_width=True,
+
+                hide_index=True
+
+            )
+
+        with right:
+
+            st.subheader("Regional Demand")
+
+            regional = pd.DataFrame({
+
+                "Region":[
+
+                    "🇺🇸 United States",
+
+                    "🇪🇺 Europe",
+
+                    "🌏 APAC"
+
+                ],
+
+                "Open Demand":[
+
+                    f"{product['regions']['US']['open_demand']:,}",
+
+                    f"{product['regions']['EU']['open_demand']:,}",
+
+                    f"{product['regions']['APAC']['open_demand']:,}"
+
+                ]
+
+            })
+
+            st.dataframe(
+
+                regional,
+
+                use_container_width=True,
+
+                hide_index=True
+
+            )
+
+    # ======================================================
+    # RISK ASSESSMENT
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Immediate Risk Assessment")
+
+        risk = pd.DataFrame({
+
+            "Risk":[
+
+                "Supplier Delay",
+
+                "Inventory Shortage",
+
+                "Customer Backlog",
+
+                "Revenue Impact",
+
+                "Customer Experience"
+
+            ],
+
+            "Likelihood":[
+
+                "High",
+
+                "High",
+
+                "High",
+
+                "Medium",
+
+                "High"
+
+            ],
+
+            "Impact":[
+
+                "Critical",
+
+                "Critical",
+
+                "Critical",
+
+                "High",
+
+                "High"
+
+            ]
+
+        })
+
+        st.dataframe(
+
+            risk,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+    # ======================================================
+    # RECOMMENDED RESPONSE
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Recommended Planning Response")
+
+        st.markdown("""
+
+1. Validate supplier recovery plan.
+
+2. Assess Inventory Health.
+
+3. Execute Stock Balance where possible.
+
+4. Evaluate Pull opportunities.
+
+5. Evaluate Push opportunities.
+
+6. Calculate remaining Planning Deficit.
+
+7. Raise a New Buy only if optimisation cannot recover the deficit.
+
+8. Allocate inventory according to business priorities.
+
+9. Communicate the recovery plan to stakeholders.
+
+10. Monitor supplier recovery through the Executive Decision Report.
+
+""")
+
+        st.success(
+            """
+The response follows a structured planning hierarchy that prioritises
+inventory optimisation before recommending additional procurement.
+"""
+        )
+# ======================================================
+# PART B
+# ======================================================
+
+with tab3:
+
+    st.header("🅱 Part B — Inventory Allocation")
+
+    with st.container(border=True):
+
+        st.subheader("Allocation Objective")
+
+        st.write(
+            """
+With inventory constrained, the objective is to allocate available
+inventory in a transparent and repeatable manner while balancing:
+
+• Customer commitments
+
+• Commercial priorities
+
+• Strategic market objectives
+
+• Available inventory
+
+The allocation engine follows the agreed priority:
+
+🇺🇸 United States
+
+↓
+
+🇪🇺 Europe
+
+↓
+
+🌏 APAC
+"""
+        )
+
+    # ======================================================
+    # INVENTORY SUMMARY
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Inventory Summary")
+
+        c1, c2, c3 = st.columns(3)
+
+        c1.metric(
+
+            "Available Inventory",
+
+            f'{allocation["Available Inventory"]:,} Units'
+
+        )
+
+        c2.metric(
+
+            "Regional Demand",
+
+            f'{engine.total_open_demand():,} Units'
+
+        )
+
+        c3.metric(
+
+            "Remaining Inventory",
+
+            f'{allocation["Remaining Inventory"]:,} Units'
+
+        )
+
+    # ======================================================
+    # ALLOCATION RESULTS
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Allocation Results")
+
+        rows = []
+
+        for region, values in allocation["Regions"].items():
+
+            rows.append({
+
+                "Region": region,
+
+                "Open Demand": values["Demand"],
+
+                "Allocated": values["Allocated"],
+
+                "Backlog": values["Backlog"],
+
+                "Fill Rate %": values["Fill Rate"]
+
+            })
+
+        st.dataframe(
+
+            pd.DataFrame(rows),
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+    # ======================================================
+    # ALLOCATION PRIORITY
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Allocation Strategy")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+
+            st.success(
+"""
+### 🇺🇸 Priority 1
+
+**United States**
+
+Protect promotional launch commitments and
+highest commercial exposure.
+"""
+            )
+
+        with col2:
+
+            st.info(
+"""
+### 🇪🇺 Priority 2
+
+**Europe**
+
+Protect confirmed customer commitments and
+maintain service levels.
+"""
+            )
+
+        with col3:
+
+            st.warning(
+"""
+### 🌏 Priority 3
+
+**APAC**
+
+Support strategic regional growth while
+maximising available inventory.
+"""
+            )
+
+    # ======================================================
+    # DECISION FACTORS
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Decision Factors")
+
+        left, right = st.columns(2)
+
+        with left:
+
+            st.markdown("""
+### Planning Considerations
+
+✅ Customer Commitments
+
+✅ Commercial Priorities
+
+✅ Available Inventory
+
+✅ Regional Demand
+
+✅ Fill Rate
+
+✅ Revenue Protection
+
+✅ Strategic Growth
+
+✅ Customer Experience
+""")
+
+        with right:
+
+            st.markdown("""
+### Potential Business Impacts
+
+• Reduced Fill Rate
+
+• Increased Customer Backlog
+
+• Lost Revenue
+
+• Customer Dissatisfaction
+
+• Delayed Promotional Activity
+
+• Increased Expedite Costs
+
+• Longer Supply Recovery
+""")
+
+    # ======================================================
+    # RECOMMENDED ACTIONS
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Recommended Actions")
+
+        st.markdown("""
+
+1. Execute the approved allocation strategy.
+
+2. Notify Sales of constrained inventory.
+
+3. Communicate revised fulfilment dates.
+
+4. Continue supplier recovery monitoring.
+
+5. Review inventory position daily.
+
+6. Re-run allocation after every significant inventory movement.
+
+7. Update stakeholders through the Executive Decision Report.
+
+""")
+
+        st.success(
+"""
+The allocation engine provides a transparent and repeatable
+method for distributing constrained inventory while balancing
+customer commitments, commercial priorities and long-term
+strategic objectives.
+"""
+        )
+# ======================================================
+# PART C
 # ======================================================
 
 with tab4:
 
-    st.header("Executive Decision Report")
+    st.header("🅲 Part C — Inventory Planning & Replenishment")
 
-    report.render()
+    with st.container(border=True):
 
+        st.subheader("Planning Objective")
+
+        st.write(
+            """
+The objective is to determine whether additional inventory should
+be purchased after all optimisation opportunities have been
+evaluated.
+
+The planning engine follows a structured hierarchy that prioritises
+inventory optimisation before recommending additional procurement.
+"""
+        )
+
+    # ======================================================
+    # PLANNING FORMULA
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Planning Methodology")
+
+        st.code(
+"""
+Target Inventory
+
+=
+
+Target Weeks of Supply
+
+×
+
+Average Weekly Demand
+
+
+Inventory Position
+
+=
+
+On Hand
+
++
+
+Open Purchase Orders
+
+(Open Purchase Orders already include
+In Transit inventory)
+
+
+Planning Deficit
+
+=
+
+Target Inventory
+
+−
+
+Inventory Position
+
+
+Recommended New Buy
+
+=
+
+MAX(Planning Deficit, Supplier MOQ)
+"""
+        )
+
+    # ======================================================
+    # INVENTORY DASHBOARD
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Inventory Dashboard")
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        c1.metric(
+
+            "Current WOS",
+
+            f'{inventory["Current WOS"]} Weeks'
+
+        )
+
+        c2.metric(
+
+            "Pipeline WOS",
+
+            f'{inventory["Pipeline WOS"]} Weeks'
+
+        )
+
+        c3.metric(
+
+            "Disruption WOS",
+
+            f'{inventory["Disruption WOS"]} Weeks'
+
+        )
+
+        c4.metric(
+
+            "Target WOS",
+
+            f'{inventory["Target WOS"]} Weeks'
+
+        )
+
+        st.divider()
+
+        c1, c2, c3 = st.columns(3)
+
+        c1.metric(
+
+            "Target Inventory",
+
+            f'{inventory["Target Inventory"]:,}'
+
+        )
+
+        c2.metric(
+
+            "Inventory Position",
+
+            f'{inventory["Inventory Position"]:,}'
+
+        )
+
+        c3.metric(
+
+            "Planning Deficit",
+
+            f'{inventory["Planning Deficit"]:,}'
+
+        )
+
+        st.divider()
+
+        c1, c2, c3 = st.columns(3)
+
+        c1.metric(
+
+            "Supplier MOQ",
+
+            f'{product["moq"]:,}'
+
+        )
+
+        c2.metric(
+
+            "Recommended New Buy",
+
+            f'{shortage["Recommended PO"]:,}'
+
+        )
+
+        c3.metric(
+
+            "Supplier",
+
+            supplier["Supplier"]
+
+        )
+
+    # ======================================================
+    # DECISION HIERARCHY
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Supply Planning Decision Hierarchy")
+
+        steps = [
+
+            (
+                "1️⃣ Inventory Health",
+                "Review Current WOS, Pipeline WOS and Inventory Position."
+            ),
+
+            (
+                "2️⃣ Stock Balance",
+                "Transfer inventory from regions operating above Target WOS."
+            ),
+
+            (
+                "3️⃣ Pull Logic",
+                "Bring forward the oldest Purchase Orders where possible."
+            ),
+
+            (
+                "4️⃣ Push Logic",
+                "Delay lower-priority Purchase Orders to recover supplier capacity."
+            ),
+
+            (
+                "5️⃣ Planning Deficit",
+                "Calculate the remaining inventory gap after optimisation."
+            ),
+
+            (
+                "6️⃣ New Buy Proposal",
+                "Recommend procurement only when optimisation cannot recover the remaining deficit."
+            )
+
+        ]
+
+        for title, description in steps:
+
+            with st.container(border=True):
+
+                st.markdown(f"### {title}")
+
+                st.write(description)
+
+    # ======================================================
+    # STOCK BALANCE
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Step 1 — Stock Balance")
+
+        balance = engine.stock_balance()
+
+        if balance["Status"] == "SUCCESS":
+
+            st.success(balance["Recommendation"])
+
+            st.dataframe(
+
+                pd.DataFrame(balance["Transfers"]),
+
+                use_container_width=True,
+
+                hide_index=True
+
+            )
+
+        else:
+
+            st.warning(balance["Recommendation"])
+
+    # ======================================================
+    # PULL & PUSH
+    # ======================================================
+
+    left, right = st.columns(2)
+
+    with left:
+
+        with st.container(border=True):
+
+            st.subheader("Step 2 — Pull Logic")
+
+            pull = engine.pull_logic()
+
+            st.metric(
+
+                "Pulled Quantity",
+
+                f'{pull["Pulled Qty"]:,} Units'
+
+            )
+
+            st.info(
+
+                pull["Recommendation"]
+
+            )
+
+            if pull["POs"]:
+
+                st.dataframe(
+
+                    pd.DataFrame(pull["POs"]),
+
+                    use_container_width=True,
+
+                    hide_index=True
+
+                )
+
+    with right:
+
+        with st.container(border=True):
+
+            st.subheader("Step 3 — Push Logic")
+
+            push = engine.push_logic()
+
+            st.metric(
+
+                "Pushed Quantity",
+
+                f'{push["Pushed Qty"]:,} Units'
+
+            )
+
+            st.info(
+
+                push["Recommendation"]
+
+            )
+
+            if push["POs"]:
+
+                st.dataframe(
+
+                    pd.DataFrame(push["POs"]),
+
+                    use_container_width=True,
+
+                    hide_index=True
+
+                )
+
+    # ======================================================
+    # FINAL DECISION
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("Final Planning Decision")
+
+        c1, c2, c3 = st.columns(3)
+
+        c1.metric(
+
+            "Planning Deficit",
+
+            f'{shortage["Planning Deficit"]:,}'
+
+        )
+
+        c2.metric(
+
+            "Supplier MOQ",
+
+            f'{shortage["MOQ"]:,}'
+
+        )
+
+        c3.metric(
+
+            "Recommended New Buy",
+
+            f'{shortage["Recommended PO"]:,}'
+
+        )
+
+        st.success(
+"""
+The planning engine only recommends a New Buy after evaluating:
+
+✅ Inventory Health
+
+✅ Stock Balance
+
+✅ Pull Logic
+
+✅ Push Logic
+
+For this scenario:
+
+• Planning Deficit = 2,076 Units
+
+• Supplier MOQ = 5,000 Units
+
+Therefore the recommended New Buy is **5,000 Units**.
+
+This ensures procurement decisions remain transparent,
+consistent and fully aligned with supplier purchasing constraints.
+"""
+        )
 # ======================================================
-# FOOTER
+# PART D
 # ======================================================
 
-st.divider()
+with tab5:
 
-st.markdown("## Reporting & Systems")
+    st.header("🅳 Part D — Process Design & Risk Management")
 
-st.markdown("""
+    with st.container(border=True):
 
-This prototype demonstrates the reporting that would support ongoing supply planning.
+        st.subheader("Objective")
 
-### Dashboards
+        st.write(
+            """
+Design a repeatable Supply Planning process that standardises
+decision making, improves visibility and reduces supply chain risk.
 
-- Inventory Health
-- Purchase Order Health
-- Supplier Lead Time
-- Weeks of Supply
-- Stock Balance Opportunities
-- Pull Recommendations
-- Push Recommendations
-- PO Shortage
-- Allocation Decisions
-- Backlog Risk
-- Decision Log
+The objective is not only to resolve today's disruption but to
+create an operating model capable of supporting future supply
+events across multiple products and suppliers.
+"""
+        )
 
-### ERP Integration
+    # ======================================================
+    # STANDARD OPERATING PROCEDURE
+    # ======================================================
 
-This solution could integrate with:
+    with st.container(border=True):
 
-- NetSuite
-- SAP
-- Oracle
-- Microsoft Dynamics
+        st.subheader("1. Standard Operating Procedure (SOP)")
 
-### Future Enhancements
+        steps = [
 
-- Live ERP Integration
-- Automated Supplier Alerts
-- Email Notifications
-- Historical Trend Analysis
-- AI Decision Recommendations
-- Multi-Supplier Planning
-- Multi-Site Inventory Optimisation
+            ("1️⃣ Supplier Disruption",
+             "Supplier confirms a production or supply constraint."),
 
+            ("2️⃣ Validate Supplier Commitment",
+             "Confirm revised production schedule, available quantity and recovery timeline."),
+
+            ("3️⃣ Inventory Health",
+             "Review Current WOS, Pipeline WOS and Inventory Position."),
+
+            ("4️⃣ Stock Balance",
+             "Evaluate regional inventory balancing opportunities."),
+
+            ("5️⃣ Pull Logic",
+             "Bring forward the oldest Purchase Orders where possible."),
+
+            ("6️⃣ Push Logic",
+             "Delay lower priority Purchase Orders to recover supplier capacity."),
+
+            ("7️⃣ Planning Deficit",
+             "Calculate the remaining inventory shortfall."),
+
+            ("8️⃣ New Buy",
+             "Raise a Purchase Order only if optimisation cannot recover the deficit."),
+
+            ("9️⃣ Inventory Allocation",
+             "Allocate constrained inventory according to business priorities."),
+
+            ("🔟 Executive Decision Report",
+             "Publish recommendations and monitor recovery daily.")
+
+        ]
+
+        for title, description in steps:
+
+            with st.container(border=True):
+
+                st.markdown(f"### {title}")
+
+                st.write(description)
+
+    # ======================================================
+    # ESCALATION MATRIX
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("2. Escalation Triggers")
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+
+            st.success("""
+### 🟢 Normal
+
+Current WOS ≥ Target WOS
+
+Routine monitoring.
 """)
 
-st.caption(
-    "Supply Planning Decision Report | Business Case Demonstration | Version 1.0"
-)
-    
+            st.warning("""
+### 🟡 Planner Review
+
+Current WOS < 8 Weeks
+
+Review inventory position and recovery options.
+""")
+
+        with c2:
+
+            st.warning("""
+### 🟠 Management Review
+
+Current WOS < 6 Weeks
+
+Daily planning review with Procurement.
+""")
+
+            st.error("""
+### 🔴 Executive Escalation
+
+Current WOS < 4 Weeks
+
+Executive recovery meeting with supplier.
+""")
+
+    # ======================================================
+    # GOVERNANCE
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("3. Governance & Decision Ownership")
+
+        governance = pd.DataFrame({
+
+            "Decision":[
+
+                "Inventory Health",
+
+                "Stock Balance",
+
+                "Pull Logic",
+
+                "Push Logic",
+
+                "New Buy Approval",
+
+                "Inventory Allocation",
+
+                "Executive Escalation"
+
+            ],
+
+            "Owner":[
+
+                "Supply Planner",
+
+                "Supply Planner",
+
+                "Supply Planner",
+
+                "Supply Planner",
+
+                "Procurement",
+
+                "Supply Planning Manager",
+
+                "Operations Director"
+
+            ]
+
+        })
+
+        st.dataframe(
+
+            governance,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+    # ======================================================
+    # STAKEHOLDERS
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("4. Stakeholders")
+
+        stakeholders = pd.DataFrame({
+
+            "Stakeholder":[
+
+                "Supply Planning",
+
+                "Procurement",
+
+                "Contract Manufacturer",
+
+                "Logistics",
+
+                "Sales",
+
+                "Finance",
+
+                "Customer Support"
+
+            ],
+
+            "Responsibility":[
+
+                "Planning Decisions",
+
+                "Supplier & PO Management",
+
+                "Production Recovery",
+
+                "Transport Recovery",
+
+                "Customer Prioritisation",
+
+                "Inventory Investment",
+
+                "Customer Communication"
+
+            ]
+
+        })
+
+        st.dataframe(
+
+            stakeholders,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+    # ======================================================
+    # REPORTING
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("5. Reporting Requirements")
+
+        reports = pd.DataFrame({
+
+            "Report":[
+
+                "Executive Decision Report",
+
+                "Inventory Health",
+
+                "Purchase Order Health",
+
+                "Supplier Health",
+
+                "Allocation Review",
+
+                "Planning KPI Review"
+
+            ],
+
+            "Frequency":[
+
+                "Daily",
+
+                "Daily",
+
+                "Daily",
+
+                "Daily",
+
+                "Daily",
+
+                "Weekly"
+
+            ]
+
+        })
+
+        st.dataframe(
+
+            reports,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+    # ======================================================
+    # KPI
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("6. Success Metrics")
+
+        c1, c2, c3 = st.columns(3)
+
+        c1.metric("Fill Rate", ">98%")
+
+        c2.metric("Target WOS", "12 Weeks")
+
+        c3.metric("Supplier OTD", ">95%")
+
+        c4, c5, c6 = st.columns(3)
+
+        c4.metric("Backlog", "<1,000")
+
+        c5.metric("Planning Cycle", "<30 mins")
+
+        c6.metric("PO Expedites", "<5%")
+
+    # ======================================================
+    # REFLECTION
+    # ======================================================
+
+    with st.container(border=True):
+
+        st.subheader("7. Long-Term Risk Reduction")
+
+        topics = [
+
+            ("Supplier Diversification",
+             "Qualify secondary suppliers to reduce dependency on a single manufacturing source."),
+
+            ("Safety Stock Strategy",
+             "Define differentiated safety stock policies based on demand variability and product criticality."),
+
+            ("Lead-Time Management",
+             "Monitor supplier lead-time trends and introduce early warning alerts."),
+
+            ("Manufacturing Concentration Risk",
+             "Reduce dependency on a single production site where practical."),
+
+            ("Tariffs & Duties",
+             "Consider landed cost and tariff exposure within sourcing decisions."),
+
+            ("Inventory Positioning",
+             "Position inventory strategically across regions to improve responsiveness."),
+
+            ("Business Continuity Planning",
+             "Maintain documented recovery playbooks and perform regular disruption simulations.")
+
+        ]
+
+        for title, text in topics:
+
+            with st.expander(title):
+
+                st.write(text)
+
+    with st.container(border=True):
+
+        st.success(
+"""
+This prototype demonstrates how manual supply planning decisions
+can be converted into a structured decision-support framework.
+
+The planning engine evaluates Inventory Health, Stock Balance,
+Pull Logic, Push Logic and Planning Deficit before recommending
+a New Buy, ensuring planning decisions remain transparent,
+consistent and repeatable.
+
+The solution has also been designed to support multiple products,
+suppliers and regions, making it scalable beyond the single-product
+business case presented in this exercise.
+"""
+        )
