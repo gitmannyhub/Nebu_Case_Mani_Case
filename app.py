@@ -354,6 +354,59 @@ The exercise focuses exclusively on Finished Goods planning.
 
 """)
 
+# ======================================================
+# PRODUCT IDENTITY
+# ======================================================
+
+with st.container(border=True):
+
+    st.subheader("📦 Product Identity")
+
+    st.markdown("""
+
+**Assumption**
+
+The business case refers to a flagship product but does not provide
+a commercial product name or SKU.
+
+For demonstration purposes, I represented the product using a
+generic Part Number within the application.
+
+**Reason**
+
+This keeps the prototype focused on Supply Planning logic rather
+than specific commercial products while allowing the planning
+framework to support multiple products in future.
+
+""")
+    
+# ======================================================
+# SUPPLIER IDENTITY
+# ======================================================
+
+with st.container(border=True):
+
+    st.subheader("🏭 Supplier Identity")
+
+    st.markdown("""
+
+**Assumption**
+
+The business case describes a Contract Manufacturer but does not
+identify the supplier.
+
+For demonstration purposes, I assigned a generic supplier name
+within the application.
+
+**Reason**
+
+The supplier name is used only to demonstrate supplier reporting
+and performance monitoring. The planning methodology remains
+independent of any specific supplier and can therefore be applied
+to multiple suppliers.
+
+""")
+
     # ======================================================
     # APPLICATION DESIGN
     # ======================================================
@@ -364,20 +417,26 @@ The exercise focuses exclusively on Finished Goods planning.
 
         st.markdown("""
 
-Although the business case contains only one product,
-the planning engine has been designed to support:
+Although the business case focuses on a single flagship product supplied
+by one Contract Manufacturer, I deliberately designed the application as
+a reusable **Supply Planning Decision Framework** rather than a
+single-case solution.
+
+The application supports:
 
 • Multiple Products
 
 • Multiple Suppliers
 
-• Multiple Manufacturing Sites
-
 • Multiple Regions
 
-without changing the business logic.
+• Reusable planning rules and decision logic
 
-This demonstrates scalability and future reuse.
+**Reason**
+
+This allows the same planning methodology to be applied consistently
+across different products and supply chain scenarios without changing
+the underlying business logic.
 
 """)
 
@@ -391,38 +450,52 @@ This demonstrates scalability and future reuse.
 
         st.markdown("""
 
-Rather than presenting calculations independently,
-this prototype generates a structured Executive Decision Report.
+Rather than presenting planning calculations independently,
+I developed a structured **Executive Decision Report** that
+consolidates operational data, business rules and planning
+recommendations into a single decision-support dashboard.
 
-The design was inspired by a reporting solution I developed at Apple,
-where automated business rules and reporting gave planners and buyers
-early visibility of supply risks before they became customer issues.
+The concept was inspired by a reporting solution I developed at
+Apple, where automated business rules and reporting provided
+planners and buyers with early visibility of supply risks before
+they became customer issues.
 
-The same principles have been adapted here to monitor:
+The same principles have been adapted to this business case to
+demonstrate how planning decisions can be operationalised and
+communicated consistently.
+
+The Executive Decision Report provides visibility of:
+
+• Executive Planning Dashboard
 
 • Inventory Health
 
 • Purchase Order Health
 
-• Stock Balance
+• Stock Balance Opportunities
 
 • Pull Logic
 
 • Push Logic
 
-• Planning Deficit
+• New Buy Recommendation
 
-• New Buy Proposal
-
-• Allocation
+• Inventory Allocation
 
 • Supplier Health
 
 • Backlog Risk
 
-• Decision Log
+• Planning Decision Log
 
 • AI Executive Summary
+
+**Reason**
+
+The objective is to provide planners and decision-makers with a
+single, consistent view of the current supply position,
+recommended actions and supporting rationale before executing
+operational decisions.
 
 """)
 
