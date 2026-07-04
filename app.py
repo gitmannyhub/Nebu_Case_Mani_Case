@@ -249,7 +249,7 @@ with tab3:
         """)
 
 # ======================================================
-# TAB 4: Part C: Inventory Planning & Replenishment
+# TAB 4: Part C: Inventory Planning & Replenishment (UPDATED)
 # ======================================================
 with tab4:
     st.header("🅲 Part C: Replenishment & Planning Deficit")
@@ -270,6 +270,11 @@ with tab4:
     with st.container(border=True):
         st.subheader("🧮 Operational Assumptions and Calculation Baseline")
         st.markdown("""
+        * **Given Demand Forecast Breakdown:**
+            * Month 1: **6,000 units**
+            * Month 2: **7,500 units**
+            * Month 3 (Peak Demand Spike): **9,000 units**
+            * Month 4: **6,500 units**
         * **Weekly Demand Run-Rate:** 1,673 units per week (7,250 average monthly forecast divided by 4.33 weeks).
         * **Safety Target:** A strict 12-week safety buffer (20,076 units required).
         * **True Inventory Position:** 8,500 units (Calculated using your exact formula: On Hand (8,000) + Open PO (10,000) - Backlog (9,500)).
@@ -277,10 +282,11 @@ with tab4:
         """)
 
     with st.container(border=True):
-        st.subheader("💼 Justifying Decisions to Finance")
+        st.subheader("💼 Justifying Decisions to Finance & Working Capital Strategy")
         st.markdown("""
         * **Avoided Revenue Loss:** Prove that ordering below the MOQ threshold ensures a total network stock-out during the Month 3 demand spike (9,000 units), costing far more in gross margin than short-term holding costs.
         * **Portfolio Balance:** Highlight that this item is in its New lifecycle stage, where early market share acquisition vastly outweighs localized inventory carrying costs.
+        * **Working Capital Mitigation (Phased Releases):** To directly address cash-flow and excess inventory concerns, we legally commit to the 15,000-unit PO to satisfy the manufacturer's MOQ rules but negotiate a **staggered shipment release schedule (3 monthly drops of 5,000 units)**. This aligns physical working capital outflows directly with our incoming regional revenue streams and prevents warehouse overcrowding.
         """)
 
     # ======================================================
@@ -331,13 +337,18 @@ with tab4:
         st.dataframe(push_portfolio, use_container_width=True, hide_index=True)
 
 # ======================================================
-# TAB 5: Part D: Operating Model & Governance
+# TAB 5: Part D: Operating Model & Governance (UPDATED)
 # ======================================================
 with tab5:
     st.header("🅳 Part D: Operating Model & Governance")
     
     with st.container(border=True):
-        st.subheader("📋 Standard Operating Procedure (SOP) Sequence")
+        st.subheader("📋 Standard Operating Procedure (SOP) & Production Cadence")
+        st.markdown("""
+        * **Weekly Run-Rate Track (Routine Track):** Automated tracking loops execute every single week to evaluate trailing consumption, update live WOS positions, and handle steady-state replenishment rebalancing requests.
+        * **3-Week Priority Lock (Structural Plan Rework):** To accommodate complex factory build plan reworks at CMHK, structural adjustments (such as a 15,000-unit stabilization buy, portfolio capacity push/pull swaps, or logistics mode changes) execute on a strict **3-week optimized cadence** to give the OEM sufficient manufacturing runway to re-allocate labor and reschedule lines.
+        """)
+        st.markdown("---")
         steps = [
             ("Step 1: Disruption Alert Trigger", "Automated system flags production or sub-tier component constraint at CMHK."),
             ("Step 2: Split-Shipment Validation", "Procurement confirms the exact split arrival windows (4,000 units vs. 6,000 units) and revised dates."),
@@ -370,7 +381,7 @@ with tab5:
         st.markdown("""
         * **Supplier Diversification:** Begin a dual-sourcing strategy by qualifying a secondary manufacturing partner outside of Hong Kong to remove single-source dependencies.
         * **Safety Stock Calibration:** Establish a differentiated safety stock architecture, holding higher component-level safety buffers for new products while keeping mature products leaner.
-        * **Inventory Positioning:** Move away from pure central holding. Move standard inventory nodes closer to regional 3PL hubs (US/EU) to drastically compress operational lead times and absorb unexpected regional spikes.
+        * **Inventory Positioning:** Move away from pure central holding. Move standard inventory nodes closer to regional 3PL hubs (US/EU) to drastically compress operational lead times and absorb unexpected demand spikes.
         """)
 
 # ======================================================
