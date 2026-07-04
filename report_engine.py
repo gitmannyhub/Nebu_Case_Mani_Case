@@ -22,22 +22,6 @@ class ReportEngine:
 
         self.stock_balance()
 
-    # self.pull_logic()
-
-    # self.push_logic()
-
-    # self.po_shortage()
-
-    # self.allocation_engine()
-
-    # self.backlog_risk()
-
-    # self.supplier_health()
-
-    # self.decision_log()
-
-    # self.ai_summary()
-
     # =========================================================
     # EXECUTIVE SUMMARY
     # =========================================================
@@ -60,7 +44,7 @@ class ReportEngine:
 
             "Current WOS",
 
-            inv["Current WOS"]
+            f"{inv['Current WOS']} Weeks"
 
         )
 
@@ -68,7 +52,7 @@ class ReportEngine:
 
             "Planning Deficit",
 
-            f'{inv["Planning Deficit"]:,}'
+            f"{inv['Planning Deficit']:,} Units"
 
         )
 
@@ -76,7 +60,7 @@ class ReportEngine:
 
             "Recommended New Buy",
 
-            f'{shortage["Recommended PO"]:,}'
+            f"{shortage['Recommended PO']:,} Units"
 
         )
 
@@ -96,7 +80,7 @@ class ReportEngine:
 
         with st.container(border=True):
 
-            st.success("### 🟢 Overall Planning Status")
+            st.error("### 🔴 Critical Planning Status")
 
             left, right = st.columns(2)
 
@@ -261,6 +245,7 @@ class ReportEngine:
                     st.success(backlog["Recommendation"])
 
         st.divider()
+
     # =========================================================
     # INVENTORY HEALTH
     # =========================================================
@@ -370,6 +355,7 @@ class ReportEngine:
                 st.error(
                     "Inventory is significantly below the planning target. Immediate recovery actions are recommended."
                 )
+
     # =========================================================
     # PURCHASE ORDER HEALTH
     # =========================================================

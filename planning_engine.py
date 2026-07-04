@@ -89,14 +89,7 @@ class SupplyPlanningEngine:
 
         """
         Inventory Position
-
-        On Hand
-
-        +
-
-        Open PO
-
-        (Do NOT add In Transit again.)
+        = On Hand + Open PO - Open Demand
         """
 
         return (
@@ -106,6 +99,10 @@ class SupplyPlanningEngine:
             +
 
             self.total_open_po()
+
+            -
+
+            self.total_open_demand()
 
         )
         # ==========================================================
@@ -666,6 +663,11 @@ class SupplyPlanningEngine:
 
             }
 
+        import math
+        
+        # Round up to the nearest MOQ multiple
+        recommended_po = math.ceil(deficit / self.moq) * self.moq
+
         return {
 
             "Required": True,
@@ -676,7 +678,7 @@ class SupplyPlanningEngine:
 
             "MOQ": self.moq,
 
-            "Recommended PO": max(deficit, self.moq)
+            "Recommended PO": recommended_po
 
         }
         # ==========================================================
@@ -685,7 +687,8 @@ class SupplyPlanningEngine:
 
     def allocation_engine(self):
 
-        available = self.total_on_hand()
+        # Locked strictly to the 4,000 unit split-shipment arrival
+        available = self.total_in_transit()
 
         remaining = available
 
