@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Supply Planning Presentation</title>
+    <style>
+        :root {
+            --bg-main: #000000; /* Pure Black Background */
+            --bg-container: #11141C; /* Darker slate container background for clean contrast */
+            --border-color: #202734; /* Container border */
+            --text-main: #D1D5DB;
+            --text-muted: #9CA3AF;
+            --white: #FFFFFF;
+            --accent-blue: #38BDF8;
+            --accent-red: #F87171;
+            --accent-green: #34D399;
+            --accent-yellow: #FBBF24;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Slide Dimensions & Print Settings */
+        .slide {
+            width: 1280px;
+            height: 720px;
+            background-color: var(--bg-main);
+            margin: 0 auto 40px auto;
+            padding: 50px 60px;
+            position: relative;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        @media print {
+            body { padding: 0; background-color: var(--bg-main); }
+            .slide { margin: 0; border: none; width: 100vw; height: 100vh; page-break-after: always; }
+            @page { size: landscape; margin: 0; }
+        }
+
+        /* Typography */
+        h1 { font-size: 34px; color: var(--white); margin: 0 0 8px 0; font-weight: 600; }
+        h2 { font-size: 16px; color: var(--text-muted); margin: 0 0 30px 0; font-weight: 400; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        
+        p, li { font-size: 14px; line-height: 1.6; margin-bottom: 8px; }
+        ul { margin-top: 5px; padding-left: 18px; }
+        strong { color: var(--white); font-weight: 600; }
+
+        /* Color-Coded Container Cards */
+        .st-container {
+            background-color: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .st-container.blue { border-left: 4px solid var(--accent-blue); }
+        .st-container.red { border-left: 4px solid var(--accent-red); }
+        .st-container.green { border-left: 4px solid var(--accent-green); }
+        .st-container.yellow { border-left: 4px solid var(--accent-yellow); }
+
+        .st-container h3 { 
+            font-size: 16px; 
+            margin: 0 0 12px 0; 
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .blue h3 { color: var(--accent-blue); }
+        .red h3 { color: var(--accent-red); }
+        .green h3 { color: var(--accent-green); }
+        .yellow h3 { color: var(--accent-yellow); }
+
+        /* Layout Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* Top KPI Cards (Slide 1) */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background-color: var(--bg-container); border: 1px solid var(--border-color); border-top-width: 4px; border-radius: 8px; padding: 20px; }
+        .kpi-card.blue { border-top-color: var(--accent-blue); }
+        .kpi-card.red { border-top-color: var(--accent-red); }
+        .kpi-card.green { border-top-color: var(--accent-green); }
+        .kpi-card.yellow { border-top-color: var(--accent-yellow); }
+        .kpi-label { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+        .kpi-value { font-size: 42px; font-weight: bold; color: var(--white); margin: 0; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 10px 15px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+        th { color: var(--text-muted); font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+
+        /* Highlights */
+        .highlight-blue { color: var(--accent-blue); font-weight: bold; }
+        .highlight-red { color: var(--accent-red); font-weight: bold; }
+        .highlight-green { color: var(--accent-green); font-weight: bold; }
+        .highlight-yellow { color: var(--accent-yellow); font-weight: bold; }
+
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 25px;
+            left: 60px;
+            right: 60px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SLIDE 1: Executive Summary -->
+    <div class="slide">
+        <h1>📦 Supply Planning Decision Framework</h1>
+        <h2>Prepared by Manikandan Sankaran | Business Case Demonstration</h2>
+
+        <div class="kpi-grid">
+            <div class="kpi-card blue">
+                <div class="kpi-label">Current WOS</div>
+                <div class="kpi-value">4.8</div>
+            </div>
+            <div class="kpi-card red">
+                <div class="kpi-label">Backlog Risk</div>
+                <div class="kpi-value">Critical</div>
+            </div>
+            <div class="kpi-card green">
+                <div class="kpi-label">New Buy</div>
+                <div class="kpi-value">15,000</div>
+            </div>
+            <div class="kpi-card yellow">
+                <div class="kpi-label">MOQ Block</div>
+                <div class="kpi-value">5,000</div>
+            </div>
+        </div>
+
+        <div class="st-container blue">
+            <h3>📊 Executive Summary Statement</h3>
+            <p>This framework establishes a highly automated, mathematically locked planning sequence for Nabu Casa. It transitions out of unstructured spreadsheets into a robust model designed to protect regional launch revenue, isolate unallocated inventory assets, and enforce strict factory production parameters.</p>
+        </div>
+
+        <div class="footer">
+            <span>Nabu Casa | Supply Planning Framework | Final Release</span>
+            <span>Slide 1 of 8</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 2: Core Assumptions -->
+    <div class="slide">
+        <h1>📝 Core Operational Architecture & Assumptions</h1>
+        <h2>The verified structural parameters driving network logic</h2>
+
+        <div class="grid-2">
+            <div class="st-container blue">
+                <h3>1️⃣ Planning Scope & Lifecycles</h3>
+                <ul>
+                    <li><strong>Lifecycle Stage:</strong> <span class="highlight-blue">New phase</span> launch status for part number FLAGSHIP123.</li>
+                    <li><strong>Demand Baseline:</strong> Calculations evaluate hard customer backlogs, not speculative projections.</li>
+                    <li><strong>Confirmed Open Demand:</strong> Total current network backlog layer is exactly 9,500 units.</li>
+                </ul>
+            </div>
+
+            <div class="st-container green">
+                <h3>2️⃣ Network Node Architecture</h3>
+                <ul>
+                    <li><strong>Supplier Identification:</strong> Core contract manufacturing node is locked as CMHK.</li>
+                    <li><strong>Gateway Code:</strong> Central hub sort facility is designated as HK111 in Hong Kong.</li>
+                    <li><strong>3PL Node Framework:</strong> Central sorting gate splits stock out straight to US, EU, and APAC hubs.</li>
+                </ul>
+            </div>
+
+            <div class="st-container red">
+                <h3>3️⃣ Timeline & Disruption Windows</h3>
+                <ul>
+                    <li><strong>Disruption Timing:</strong> Shortage alert arrived exactly 2 days before the standard departure window.</li>
+                    <li><strong>Split Delivery Timelines:</strong> 4,000 units land immediately; 6,000 units face a <span class="highlight-red">3-week factory delay</span>.</li>
+                    <li><strong>True Lead Time:</strong> 8-week production lifecycle plus a 2-week ocean shipping buffer block.</li>
+                </ul>
+            </div>
+
+            <div class="st-container yellow">
+                <h3>4️⃣ Mathematical Asset Rules</h3>
+                <ul>
+                    <li><strong>On-Hand Isolation Rule:</strong> 8,000 units on hand are fully pre-allocated and cannot fill new gaps.</li>
+                    <li><strong>Factory Batch MOQ:</strong> Fixed 5,000-unit production runs requiring math ceiling rounding to prevent shortages.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>Nabu Casa | Supply Planning Framework | Final Release</span>
+            <span>Slide 2 of 8</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: Part A -->
+    <div class="slide">
+        <h1>🅰 Part A: Supply Disruption Management</h1>
+        <h2>Immediate response sequences and factory capacity optimization loops</h2>
+
+        <div class="grid-2">
+            <div class="st-container red">
+                <h3>⏱ The First 48 Hours: Stabilization Sequence</h3>
+                <ul>
+                    <li><strong>Isolate the Constraint:</strong> Align directly with CMHK to lock down the split-shipment numbers (4,000 immediate vs 6,000 delayed by 3 weeks) to plan against facts.</li>
+                    <li><strong>Execute Net Asset Accounting:</strong> Calculate Net Assets (On Hand + Open PO - Backlog). Apply the On-Hand Isolation Rule to define true current network exposure.</li>
+                    <li><strong>Protect Commercial Launch Vectors:</strong> Isolate high-risk windows, routing the immediate 4,000 physical pool directly to the upcoming <span class="highlight-red">US promo launch</span>.</li>
+                </ul>
+            </div>
+
+            <div class="st-container green">
+                <h3>🏭 Supplier Cross-Portfolio Mitigation Strategy</h3>
+                <ul>
+                    <li><strong>Portfolio Capacity Swapping (Push Logic):</strong> Evaluate the broader factory floor. Request CMHK to push out low-priority sustaining lines (e.g. SUSTAINING456 under PO10003) by 4 weeks to immediately free up factory capacity slots for our flagship run.</li>
+                    <li><strong>Logistics Expediting (Pull Logic):</strong> Switch the delayed 6,000 balance to a <span class="highlight-green">priority air corridor</span> directly out of HK111 to eliminate standard ocean legs and recover the 3-week gap.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="st-container blue">
+            <h3>👥 Stakeholder Alignment</h3>
+            <p>Coordinate with Procurement for PO variations, Sales to manage distributor exceptions, and Finance for air freight variance sign-offs. Communicate recovery roadmaps to affected EU and APAC channels within 48 hours to preserve partner account trust.</p>
+        </div>
+
+        <div class="footer">
+            <span>Nabu Casa | Supply Planning Framework | Final Release</span>
+            <span>Slide 3 of 8</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: Part B -->
+    <div class="slide">
+        <h1>🅱 Part B: Inventory Allocation Strategy</h1>
+        <h2>Commercial priority cascade and strategic hub allocation modeling</h2>
+
+        <div class="st-container blue">
+            <h3>📊 Allocation Engine Breakdown</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Regional 3PL Hub</th>
+                        <th>Open Backlog</th>
+                        <th>Allocated Pool</th>
+                        <th>Net Deficit</th>
+                        <th>Fill Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="color: var(--accent-green); font-weight: bold;">
+                        <td>US Hub (Promo Launch)</td>
+                        <td>4,500 Units</td>
+                        <td>4,000 Units</td>
+                        <td>500 Units</td>
+                        <td>88.8%</td>
+                    </tr>
+                    <tr>
+                        <td>EU Hub (Stable Demand)</td>
+                        <td>3,000 Units</td>
+                        <td>0 Units</td>
+                        <td>3,000 Units</td>
+                        <td>0.0%</td>
+                    </tr>
+                    <tr>
+                        <td>APAC Hub (Strategic Growth)</td>
+                        <td>2,000 Units</td>
+                        <td>0 Units</td>
+                        <td>2,000 Units</td>
+                        <td>0.0%</td>
+                    </tr>
+                    <tr style="background-color: #0B0E14; border-top: 1px solid var(--border-color);">
+                        <td><strong>Total Network Portfolio</strong></td>
+                        <td><strong>9,500 Units</strong></td>
+                        <td><strong>4,000 Units</strong></td>
+                        <td><strong>5,500 Units</strong></td>
+                        <td><strong>42.1%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid-2">
+            <div class="st-container yellow">
+                <h3>⚙ Strategic Trade-off Justification</h3>
+                <p>100% of the arriving pool is routed to the United States to protect a <span class="highlight-yellow">high-exposure promotional launch next week</span>, accepting a minor 500-unit short. EU and APAC nodes are intentionally deferred, programmatically receiving 0 units from this immediate intake.</p>
+            </div>
+            
+            <div class="st-container green">
+                <h3>📢 Partner Management</h3>
+                <p>This localized EU and APAC deficit is managed proactively. Partners are provided a firm, data-verified logistics roadmap locking their backlogs into the incoming expedited <span class="highlight-green">air freight balance</span> clearing on July 24, 2026, preserving account trust rather than hiding the shortage.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>Nabu Casa | Supply Planning Framework | Final Release</span>
+            <span>Slide 4 of 8</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 5: Part C -->
+    <div class="slide">
+        <h1>🅲 Part C: Replenishment & Planning Deficit</h1>
+        <h2>Mathematical modeling of network inventory positions and production MOQ rules</h2>
+
+        <div class="grid-2">
+            <div class="st-container blue">
+                <h3>🧮 Operational Calculation Inputs</h3>
+                <ul>
+                    <li><strong>Weekly Demand Run-Rate:</strong> 1,673 units per week.</li>
+                    <li><strong>Target Safety Cover Buffer:</strong> Strict 12-week network safety target requires <span class="highlight-blue">20,076 units</span> in position.</li>
+                    <li><strong>True Inventory Position Formula:</strong> On Hand (8,000) + Open PO (10,000) - Backlog (9,500) = <strong>8,500 net units</strong>.</li>
+                    <li><strong>Net Deficit:</strong> 20,076 (Target) - 8,500 (Position) = <strong>11,576 units raw deficit</strong>.</li>
+                </ul>
+            </div>
+
+            <div class="st-container green">
+                <h3>🛒 MOQ Step-Batch Ceiling Function</h3>
+                <p>Dividing the 11,576 deficit by the strict 5,000-unit factory MOQ block yields 2.315 batches.</p>
+                <p>Applying a mathematical ceiling function rounds the procurement proposal up to 3 full production batches, generating an optimized <span class="highlight-green">15,000-unit New Buy order</span>. This completely insulates the peak 9,000-unit demand spike hitting the floor in Month 3.</p>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="st-container yellow">
+                <h3>💼 Justification to Finance</h3>
+                <p>Ordering only 10,000 units would fail to clear the deficit, leaving a critical 1,576-unit exposure gap. The 15,000-unit order protects high-margin revenue and market share during the critical <span class="highlight-yellow">New product lifecycle phase</span> where stockout costs far outweigh localized holding expenses.</p>
+            </div>
+
+            <div class="st-container blue">
+                <h3>💻 ERP Systems Architecture</h3>
+                <ul>
+                    <li><strong>Days of Inventory Coverage:</strong> Live metric mapping physical stocks against forecasts.</li>
+                    <li><strong>PO Lifecycle Pipeline:</strong> Track production milestones at CMHK alongside transit gates via HK111.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>Nabu Casa | Supply Planning Framework | Final Release</span>
+            <span>Slide 5 of 8</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 6: Part D -->
+    <div class="slide">
+        <h1>🅳 Part D: Operating Model & Governance Architecture</h1>
+        <h2>Documented Standard Operating Procedures, cross-functional ownership, and risk reduction</h2>
+
+        <div class="st-container blue">
+            <h3>📋 Standard Operating Procedure (SOP) Sequence</h3>
+            <p><strong>Step 1: Alert Trigger</strong> (Automated ERP tracking flags a production constraint at CMHK) ➔ <strong>Step 2: Split Validation</strong> (Procurement confirms exact split quantities and arrival windows within 24 hours) ➔ <strong>Step 3: Asset Processing</strong> (Planning applies net asset formulas to compute deficits against safety cover) ➔ <strong>Step 4: Priority Cascade</strong> (Allocation engine triggers priority commercial cascade protecting launch lines) ➔ <strong>Step 5: Governance Loop</strong> (Procurement executes step-batch reorders through appropriate authorization gates).</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="st-container red">
+                <h3>🚦 Weeks of Supply (WOS) Escalation Triggers</h3>
+                <ul>
+                    <li><strong>🟢 Normal (WOS >= 12):</strong> Routine automated monitoring handled completely by the Supply Planner.</li>
+                    <li><strong>🟡 Planner Review (WOS < 8):</strong> Flagged constraint window; local 3PL rebalancing activated by the Supply Planner.</li>
+                    <li><strong>🟠 Management Sync (WOS < 6):</strong> Daily tracking cycles and cross-functional synchronization led by the Supply Planning Manager.</li>
+                    <li><strong>🔴 Executive Isolation (WOS < 4):</strong> <span class="highlight-red">Emergency meeting</span> with CMHK leadership driven directly by the Operations Director.</li>
+                </ul>
+            </div>
+            
+            <div class="st-container green">
+                <h3>🌍 Long-Term Global Risk Mitigation</h3>
+                <ul>
+                    <li><strong>Supplier Diversification:</strong> Establish a formal dual-sourcing strategy by qualifying a secondary manufacturing node outside Hong Kong to remove single-source exposure.</li>
+                    <li><strong>Safety Stock Calibration:</strong> Transition to differentiated inventory models: holding higher component buffers for New lines while keeping mature items lean.</li>
+                    <li><strong>Inventory Positioning:</strong> Position inventory nodes closer to regional 3PL hubs (US/EU) to compress transit legs and absorb unexpected demand spikes.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>Nabu Casa | Supply Planning Framework | Final Release</span>
+            <span>Slide 8 of 8</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 7: Part E -->
+    <div class="slide">
+        <h1>📧 Part E: Quality & Returns Management</h1>
+        <h2>Real-time exception workflows, automated quarantines, and rapid customer response pipelines</h2>
+
+        <div class="grid-2">
+            <div class="st-container red">
+                <h3>🚨 Real-Time Outlier Detection & Quarantining</h3>
+                <ul>
+                    <li><strong>Z-Score Monitoring Dashboard:</strong> Configured to process regional return log data fields continuously. The absolute millisecond returns cross a strict <span class="highlight-red">1.5% defect threshold</span>, an emergency system hold triggers.</li>
+                    <li><strong>Instant Gateway Isolation:</strong> Systemic hold codes execute immediately across the ERP architecture, freezing and quarantining remaining lots at the central HK111 gateway and regional 3PL networks before defective items reach downstream customers.</li>
+                </ul>
+            </div>
+
+            <div class="st-container green">
+                <h3>⚡ Accelerated RMA Pipeline</h3>
+                <ul>
+                    <li><strong>Scrap-in-Place Protocol:</strong> Distributors log failing serial strings via an online portal. To bypass expensive cross-border reverse logistics freight and customs friction, regional 3PLs execute an immediate local <span class="highlight-green">scrap-in-place protocol within a 15-minute resolution SLA</span>, auto-generating instant credit memos.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="st-container blue">
+            <h3>🏭 Root Cause Investigation & CAPA</h3>
+            <p>Dispatch technical engineering resource partners directly to the CMHK manufacturing floor to audit assembly lines and component sub-tiers. Mandate automated optical inspection loops on the factory floor, enforce strict component screening gates at intake, and implement isolated pilot-run verification cycles on all subsequent production lots.</p>
+        </div>
+
+        <div class="footer">
+            <span>Nabu Casa | Supply Planning Framework | Final Release</span>
+            <span>Slide 7 of 8</span>
+        </div>
+    </div>
+
+    <!-- SLIDE 8: Part F -->
+    <div class="slide">
+        <h1>🤖 Part F: Statement of AI Collaboration & Professional Judgment</h1>
+        <h2>Human-in-the-loop framework balancing automated productivity with professional experience</h2>
+
+        <div class="st-container blue">
+            <h3>The Productivity Engine</h3>
+            <p>I utilized AI as a collaborative tool to speed up code prototyping for the interactive Streamlit dashboard, streamline documentation layouts, and refine presentation wording. AI also helped build structural formatting elements for data analysis within the application interface profiles.</p>
+        </div>
+
+        <div class="st-container green">
+            <h3>Professional Grounding & The Apple Paradigm</h3>
+            <p>I reviewed and explicitly overrode automated AI suggestions that relied on generic template formulas or double-counted net pipeline assets. I manually built out the exact mathematical MOQ batch function and portfolio push strategies based entirely on my own logic.</p>
+            <p>All core assumptions, risk priority choices, escalation thresholds, and SOP flows rely on my personal experience in global supply operations, incorporating structural framework concepts I previously implemented when deploying new operational processes to ensure real-world accuracy.</p>
+        </div>
+
+        <div class="st-container yellow">
+            <h3>Future Vision</h3>
+            <p>In this role, AI serves as an advanced decision-support engine, not a decision-maker. It is highly effective at automating routine tracking data and flagging early supplier risks, but critical commercial trade-offs and human relationship management must always rest firmly on a planner's professional judgment.</p>
+        </div>
+
+        <div class="footer">
+            <span>Nabu Casa | Supply Planning Framework | Final Release</span>
+            <span>Slide 8 of 8</span>
+        </div>
+    </div>
+
+</body>
+</html>
